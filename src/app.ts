@@ -5,22 +5,30 @@ import morgan from "morgan";
 
 import { connectDb } from "./db";
 
-import api from './api/index';
+import api from "./api/index";
 
-import * as middlewares from './middlewares';
+import * as middlewares from "./middlewares";
 
 const app = express();
 
-connectDb()
+connectDb();
+
+const corsWhitelist = ["http://localhost:5173"];
+
+app.use(
+  cors({
+    credentials: true,
+    origin: corsWhitelist,
+  })
+);
 
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 
-app.use("/api/v1", api)
+app.use("/api/v1", api);
 
-app.use(middlewares.notFound)
-app.use(middlewares.errorHandler)
+app.use(middlewares.notFound);
+app.use(middlewares.errorHandler);
 
 export default app;
