@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getAllComments, postComment, postReply, updateComment } from "./comments.controller";
+import { deleteComment, getAllComments, postComment, postReply, updateComment } from "./comments.controller";
 
 import { validateRequest } from "src/middlewares";
 
@@ -36,5 +36,7 @@ router.put(
   }),
   updateComment
 );
+
+router.delete("/:id", deleteComment)
 
 export default router;
