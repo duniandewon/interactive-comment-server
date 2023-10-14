@@ -11,7 +11,7 @@ export async function getAllComments(
   next: NextFunction
 ) {
   try {
-    const comments = await Comment.find({ replyingTo: { $exists: false } })
+    const comments = await Comment.find({ mention: { $exists: false } })
       .populate("user")
       .populate({
         path: "replies",
@@ -51,52 +51,6 @@ export async function postComment(
     });
   } catch (error) {
     next(error);
-  }
-}
-
-export async function postReply(
-  req: Request<ParamsWithId, CommentDocument, ZComment>,
-  res: Response<MessageResponse<CommentDocument | null>>,
-  next: NextFunction
-) {
-  try {
-    let parentComment = await Comment.findById(req.params.id);
-
-    if (!parentComment)
-      return res.json({
-        data: parentComment,
-        meta: {
-          code: 404,
-          message: "Not found",
-        },
-      });
-
-    const newComment = await Comment.create(req.body);
-
-    parentComment = await Comment.findByIdAndUpdate(
-      req.params.id,
-      {
-        $push: { replies: newComment },
-      },
-      { new: true }
-    )
-      .populate("user")
-      .populate({
-        path: "replies",
-        populate: {
-          path: "user",
-        },
-      });
-
-    return res.json({
-      data: parentComment,
-      meta: {
-        code: 200,
-        message: "Success",
-      },
-    });
-  } catch (error) {
-    return next(error);
   }
 }
 
@@ -144,13 +98,21 @@ export async function updateComment(
   }
 }
 
+async function updateParentComment(id: string, commentId:string) {
+  let comment = await Comment.findById(id);
+
+  if (!comment) throw new Error("Comment parent not found");
+
+  comment.replies?.find(reply => reply._id === commentId)
+}
+
 export async function deleteComment(
   req: Request<ParamsWithId, {}, {}>,
   res: Response<MessageResponse<null>>,
   next: NextFunction
 ) {
   try {
-    let comment = await Comment.findById(req.params.id);
+    let comment = await Comment.findByIdAndDelete(req.params.id);
 
     if (!comment)
       return res.json({
@@ -161,7 +123,7 @@ export async function deleteComment(
         },
       });
 
-    await Comment.findByIdAndDelete(req.params.id);
+      if(comment.parentId) updateParentComment(comment.parentId, comment._id)
 
     return res.json({
       data: null,

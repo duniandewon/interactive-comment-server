@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { deleteComment, getAllComments, postComment, postReply, updateComment } from "./comments.controller";
+import { deleteComment, getAllComments, postComment, updateComment } from "./comments.controller";
 
 import { validateRequest } from "src/middlewares";
 
@@ -17,15 +17,6 @@ router.post(
     body: ZComment,
   }),
   postComment
-);
-
-router.post(
-  "/:id",
-  validateRequest({
-    params: ParamsWithId,
-    body: ZComment,
-  }),
-  postReply
 );
 
 router.put(
